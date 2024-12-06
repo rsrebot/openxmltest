@@ -11,6 +11,8 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Presentation;
 
+namespace PptChartEditor;
+
 public class ChartData
 {
   public required string[] SeriesNames;
@@ -47,7 +49,8 @@ public class ChartUpdater
       throw new ArgumentException("Invalid slide number");
     }
 
-    var chart = slide.ChartParts.Skip(chartIdx - 1).First();
+    var charts = slide.ChartParts.Skip(chartIdx - 1);
+    var chart = charts.First();
 
     if (chart != null)
     {
@@ -203,27 +206,5 @@ public class ChartUpdater
           element.Nodes().Select(n => UnlinkSpreadsheetTransform(n)));
     }
     return node;
-  }
-
-  internal static bool UpdateChart(PresentationDocument pDoc, int slideNumber, ChartData chartData)
-  {
-    var presentationPart = pDoc.PresentationPart;
-    var pXDoc = presentationPart.GetXDocument();
-    var sldIdElement = pXDoc.Root.Elements(P.sldIdLst).Elements(P.sldId).Skip(slideNumber - 1).FirstOrDefault();
-    if (sldIdElement != null)
-    {
-      var rId = (string)sldIdElement.Attribute(R.id);
-      var slidePart = presentationPart.GetPartById(rId);
-      var sXDoc = slidePart.GetXDocument();
-      var chartRid = (string)sXDoc.Descendants(C.chart).Attributes(R.id).FirstOrDefault();
-      if (chartRid != null)
-      {
-        ChartPart chartPart = (ChartPart)slidePart.GetPartById(chartRid);
-        UpdateChart(chartPart, chartData);
-        return true;
-      }
-      return true;
-    }
-    return false;
   }
 }
